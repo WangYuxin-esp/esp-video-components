@@ -9,4 +9,12 @@ menu "Espressif Camera Sensors Configurations"
     rsource "sensors/sc2336/Kconfig.sc2336"
     rsource "sensors/sc202cs/Kconfig.sc202cs"
     rsource "sensors/sc035hgs/Kconfig.sc035hgs"
+
+    menu "XCLK generator Configuration"
+        config LEDC_XCLK_ENABLE
+            bool "LEDC-based XCLK generator enable"
+            default y
+            help
+                If enabled, The LEDC-based XCLK generator interface can be used.
+    endmenu
 endmenu

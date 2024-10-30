@@ -16,6 +16,7 @@
 #include "linux/videodev2.h"
 #include "esp_video_device.h"
 #include "esp_video_init.h"
+#include "esp_xclk_generator.h"
 
 #if CONFIG_EXAMPLE_VIDEO_BUFFER_TYPE_USER
 #include "esp_heap_caps.h"
@@ -34,6 +35,12 @@
 
 #define BUFFER_COUNT 2
 #define CAPTURE_SECONDS 3
+
+#define LEDC_TIMER              LEDC_TIMER_0
+#define LEDC_CHANNEL            LEDC_CHANNEL_0
+#define LEDC_TIMER_CLK_CFG      LEDC_AUTO_CLK
+#define LEDC_FREQUENCY          (20000000) // Frequency in Hertz. Set frequency at 10MHz
+#define LEDC_OUTPUT_IO          (46) // Define the output GPIO
 
 static const char *TAG = "example";
 
@@ -337,6 +344,11 @@ exit_0:
 void app_main(void)
 {
     esp_err_t ret = ESP_OK;
+    esp_xclk_generator_handle_t xclk_handle = NULL;
+    if(xclk_ledc_generator_start(LEDC_TIMER, LEDC_TIMER_CLK_CFG, LEDC_CHANNEL, LEDC_FREQUENCY, LEDC_OUTPUT_IO, &xclk_handle) != ESP_OK) {
+        ESP_LOGE(TAG, "Init xclk failed");
+        return;
+    }
 
     ret = esp_video_init(&cam_config);
     if (ret != ESP_OK) {
