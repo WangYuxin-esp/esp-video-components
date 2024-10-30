@@ -1,3 +1,7 @@
+## 0.5.6
+
+- Added support for SC035HGS 
+
 ## 0.5.5
 
 - Added support for querying flip and mirror parameters 
