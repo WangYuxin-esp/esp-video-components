@@ -16,10 +16,37 @@
 #include "sc035hgs_settings.h"
 #include "sc035hgs.h"
 
+/*
+ * SC035HGS camera sensor gain control.
+ */
+typedef struct {
+    uint8_t again_fine; // analog gain fine
+    uint8_t again_coarse; // analog gain coarse
+    uint8_t dgain_fine; // digital gain fine
+    uint8_t dgain_coarse; // digital gain coarse
+} sc035hgs_gain_t;
+
+typedef struct {
+    uint32_t exposure_val;
+    uint32_t gain_index; // current gain index
+
+    uint32_t vflip_en : 1;
+    uint32_t hmirror_en : 1;
+} sc035hgs_para_t;
+
+struct sc035hgs_cam {
+    sc035hgs_para_t sc035hgs_para;
+};
+
 #define SC035HGS_IO_MUX_LOCK(mux)
 #define SC035HGS_IO_MUX_UNLOCK(mux)
 #define SC035HGS_ENABLE_OUT_XCLK(pin,clk)
 #define SC035HGS_DISABLE_OUT_XCLK(pin)
+
+#define SC035HGS_FETCH_EXP_H(val)     (((val) >> 4) & 0xFF)
+#define SC035HGS_FETCH_EXP_L(val)     (((val) & 0xF) << 4)
+#define SC035HGS_GROUP_HOLD_START	0X00
+#define SC035HGS_GROUP_HOLD_LUNCH	0x30
 
 #define SC035HGS_PID         0x0031
 #define SC035HGS_SENSOR_NAME "SC035HGS"
@@ -31,6 +58,186 @@
 
 static const char *TAG = "sc035hgs";
 
+// total gain = analog_gain x digital_gain x 1000(To avoid decimal points, the final abs_gain is multiplied by 1000.)
+static const uint32_t sc035hgs_total_gain_val_map[] = {
+    //1x
+    1000,
+    1062,
+    1125,
+    1187,
+    1250,
+    1312,
+    1375,
+    1437,
+    1500,
+    1562,
+    1625,
+    1687,
+    1750,
+    1812,
+    1875,
+    1937,
+    //2x
+    2000,
+    2125,
+    2250,
+    2375,
+    2500,
+    2625,
+    2750,
+    2875,
+    3000,
+    3125,
+    3250,
+    3375,
+    3500,
+    3625,
+    3750,
+    3875,
+    //4x
+    4000,
+    4250,
+    4500,
+    4750,
+    5000,
+    5250,
+    5500,
+    5750,
+    6000,
+    6250,
+    6500,
+    6750,
+    7000,
+    7250,
+    7500,
+    7750,
+    //8x
+    8000,
+    8500,
+    9000,
+    9500,
+    10000,
+    10500,
+    11000,
+    11500,
+    12000,
+    12500,
+    13000,
+    13500,
+    14000,
+    14500,
+    15000,
+    15500,
+    //16x
+    16468,
+    17437,
+    18406,
+    19375,
+    20343,
+    21312,
+    22281,
+    23250,
+    24218,
+    25187,
+    26156,
+    27125,
+    28093,
+    29062,
+    30031,
+    31000,
+    32937,
+};
+
+// SC035HGS Gain map format: [ANG_FINE(0x3e09), ANG_COARSE(0x3e08), DIG_FINE(0x3e07), DIG_COARSE(0x3e06)]
+static const sc035hgs_gain_t sc035hgs_gain_map[] = {
+    // 1x
+    {0x10, 0x00, 0x80, 0x00},
+    {0x11, 0x00, 0x80, 0x00},
+    {0x12, 0x00, 0x80, 0x00},
+    {0x13, 0x00, 0x80, 0x00},
+    {0x14, 0x00, 0x80, 0x00},
+    {0x15, 0x00, 0x80, 0x00},
+    {0x16, 0x00, 0x80, 0x00},
+    {0x17, 0x00, 0x80, 0x00},
+    {0x18, 0x00, 0x80, 0x00},
+    {0x19, 0x00, 0x80, 0x00},
+    {0x1a, 0x00, 0x80, 0x00},
+    {0x1b, 0x00, 0x80, 0x00},
+    {0x1c, 0x00, 0x80, 0x00},
+    {0x1d, 0x00, 0x80, 0x00},
+    {0x1e, 0x00, 0x80, 0x00},
+    {0x1f, 0x00, 0x80, 0x00},
+    // 2x
+    {0x10, 0x01, 0x80, 0x00},
+    {0x11, 0x01, 0x80, 0x00},
+    {0x12, 0x01, 0x80, 0x00},
+    {0x13, 0x01, 0x80, 0x00},
+    {0x14, 0x01, 0x80, 0x00},
+    {0x15, 0x01, 0x80, 0x00},
+    {0x16, 0x01, 0x80, 0x00},
+    {0x17, 0x01, 0x80, 0x00},
+    {0x18, 0x01, 0x80, 0x00},
+    {0x19, 0x01, 0x80, 0x00},
+    {0x1a, 0x01, 0x80, 0x00},
+    {0x1b, 0x01, 0x80, 0x00},
+    {0x1c, 0x01, 0x80, 0x00},
+    {0x1d, 0x01, 0x80, 0x00},
+    {0x1e, 0x01, 0x80, 0x00},
+    {0x1f, 0x01, 0x80, 0x00},
+    // 4x
+    {0x10, 0x03, 0x80, 0x00},
+    {0x11, 0x03, 0x80, 0x00},
+    {0x12, 0x03, 0x80, 0x00},
+    {0x13, 0x03, 0x80, 0x00},
+    {0x14, 0x03, 0x80, 0x00},
+    {0x15, 0x03, 0x80, 0x00},
+    {0x16, 0x03, 0x80, 0x00},
+    {0x17, 0x03, 0x80, 0x00},
+    {0x18, 0x03, 0x80, 0x00},
+    {0x19, 0x03, 0x80, 0x00},
+    {0x1a, 0x03, 0x80, 0x00},
+    {0x1b, 0x03, 0x80, 0x00},
+    {0x1c, 0x03, 0x80, 0x00},
+    {0x1d, 0x03, 0x80, 0x00},
+    {0x1e, 0x03, 0x80, 0x00},
+    {0x1f, 0x03, 0x80, 0x00},
+    // 8x
+    {0x10, 0x07, 0x80, 0x00},
+    {0x11, 0x07, 0x80, 0x00},
+    {0x12, 0x07, 0x80, 0x00},
+    {0x13, 0x07, 0x80, 0x00},
+    {0x14, 0x07, 0x80, 0x00},
+    {0x15, 0x07, 0x80, 0x00},
+    {0x16, 0x07, 0x80, 0x00},
+    {0x17, 0x07, 0x80, 0x00},
+    {0x18, 0x07, 0x80, 0x00},
+    {0x19, 0x07, 0x80, 0x00},
+    {0x1a, 0x07, 0x80, 0x00},
+    {0x1b, 0x07, 0x80, 0x00},
+    {0x1c, 0x07, 0x80, 0x00},
+    {0x1d, 0x07, 0x80, 0x00},
+    {0x1e, 0x07, 0x80, 0x00},
+    {0x1f, 0x07, 0x80, 0x00},
+    // 16x
+    {0x1f, 0x07, 0x88, 0x00}, // 16.46875
+    {0x1f, 0x07, 0x90, 0x00}, // 17.4375
+    {0x1f, 0x07, 0x98, 0x00}, // 18.40625
+    {0x1f, 0x07, 0xa0, 0x00}, // 19.375
+    {0x1f, 0x07, 0xa8, 0x00}, // 20.34375
+    {0x1f, 0x07, 0xb0, 0x00}, // 21.3125
+    {0x1f, 0x07, 0xb8, 0x00}, // 22.28125
+    {0x1f, 0x07, 0xc0, 0x00}, // 23.25
+    {0x1f, 0x07, 0xc8, 0x00}, // 24.21875
+    {0x1f, 0x07, 0xd0, 0x00}, // 25.1875
+    {0x1f, 0x07, 0xd8, 0x00}, // 26.15625
+    {0x1f, 0x07, 0xe0, 0x00}, // 27.125
+    {0x1f, 0x07, 0xe8, 0x00}, // 28.09375
+    {0x1f, 0x07, 0xf0, 0x00}, // 29.0625
+    {0x1f, 0x07, 0xf8, 0x00}, // 30.03125
+    {0x1f, 0x07, 0x80, 0x01}, // 31.0000
+    {0x1f, 0x07, 0x88, 0x01}, // 32.9375
+};
+
 static const esp_cam_sensor_isp_info_t sc035hgs_isp_info[] = {
     {
         .isp_v1_info = {
@@ -38,6 +245,8 @@ static const esp_cam_sensor_isp_info_t sc035hgs_isp_info[] = {
             .pclk = 50056704,
             .vts = 0x394,
             .hts = 0x470,
+            .gain_def = 0,
+            .exp_def = 0x18f,
             .bayer_type = ESP_CAM_SENSOR_BAYER_BGGR,
         }
     }
@@ -150,8 +359,14 @@ static esp_err_t sc035hgs_get_sensor_id(esp_cam_sensor_device_t *dev, esp_cam_se
 static esp_err_t sc035hgs_set_stream(esp_cam_sensor_device_t *dev, int enable)
 {
     esp_err_t ret = ESP_FAIL;
-    ret = sc035hgs_write(dev->sccb_handle, SC035HGS_REG_SLEEP_MODE, enable ? 0x01 : 0x00);
 
+    ret = sc035hgs_write(dev->sccb_handle, SC035HGS_REG_SLEEP_MODE, enable ? 0x01 : 0x00);
+    if(enable) {
+        ret |= sc035hgs_write(dev->sccb_handle, 0x4418, 0x0a);
+        ret |= sc035hgs_write(dev->sccb_handle, 0x363d, 0x10);
+        ret |= sc035hgs_write(dev->sccb_handle, 0x4419, 0x80);
+    }
+    
     dev->stream_status = enable;
     ESP_LOGD(TAG, "Stream=%d", enable);
     return ret;
@@ -171,6 +386,19 @@ static esp_err_t sc035hgs_query_para_desc(esp_cam_sensor_device_t *dev, esp_cam_
 {
     esp_err_t ret = ESP_OK;
     switch (qdesc->id) {
+    case ESP_CAM_SENSOR_EXPOSURE_VAL:
+        qdesc->type = ESP_CAM_SENSOR_PARAM_TYPE_NUMBER;
+        qdesc->number.minimum = 0xf;
+        qdesc->number.maximum = dev->cur_format->isp_info->isp_v1_info.vts - 6; // max = VTS-6 = height+vblank-6, so when update vblank, exposure_max must be updated
+        qdesc->number.step = 1;
+        qdesc->default_value = dev->cur_format->isp_info->isp_v1_info.exp_def;
+        break;
+    case ESP_CAM_SENSOR_GAIN:
+        qdesc->type = ESP_CAM_SENSOR_PARAM_TYPE_ENUMERATION;
+        qdesc->enumeration.count = ARRAY_SIZE(sc035hgs_total_gain_val_map);
+        qdesc->enumeration.elements = sc035hgs_total_gain_val_map;
+        qdesc->default_value = dev->cur_format->isp_info->isp_v1_info.gain_def; // gain index
+        break;
     case ESP_CAM_SENSOR_VFLIP:
     case ESP_CAM_SENSOR_HMIRROR:
         qdesc->type = ESP_CAM_SENSOR_PARAM_TYPE_NUMBER;
@@ -190,14 +418,68 @@ static esp_err_t sc035hgs_query_para_desc(esp_cam_sensor_device_t *dev, esp_cam_
 
 static esp_err_t sc035hgs_get_para_value(esp_cam_sensor_device_t *dev, uint32_t id, void *arg, size_t size)
 {
-    return ESP_ERR_NOT_SUPPORTED;
+    esp_err_t ret = ESP_OK;
+    struct sc035hgs_cam *cam_sc035hgs = (struct sc035hgs_cam *)dev->priv;
+    switch (id) {
+    case ESP_CAM_SENSOR_EXPOSURE_VAL: {
+        *(uint32_t *)arg = cam_sc035hgs->sc035hgs_para.exposure_val;
+        break;
+    }
+    case ESP_CAM_SENSOR_GAIN: {
+        *(uint32_t *)arg = cam_sc035hgs->sc035hgs_para.gain_index;
+        break;
+    }
+    default: {
+        ret = ESP_ERR_NOT_SUPPORTED;
+        break;
+    }
+    }
+    return ret;
 }
 
 static esp_err_t sc035hgs_set_para_value(esp_cam_sensor_device_t *dev, uint32_t id, const void *arg, size_t size)
 {
     esp_err_t ret = ESP_OK;
+    struct sc035hgs_cam *cam_sc035hgs = (struct sc035hgs_cam *)dev->priv;
 
     switch (id) {
+    case ESP_CAM_SENSOR_EXPOSURE_VAL: {
+        uint32_t u32_val = *(uint32_t *)arg;
+        ESP_LOGD(TAG, "set exposure 0x%" PRIx32, u32_val);
+        // Todo, convert to uint seconds, sc035hgs exposure time use 1/16 * LTime as step, and EXP Rows = {0x3e01, 0x3e02} + 0x3226
+        ret = sc035hgs_write(dev->sccb_handle, SC035HGS_REG_GROUP_HOLD, SC035HGS_GROUP_HOLD_START);
+        ret |= sc035hgs_write(dev->sccb_handle, SC035HGS_REG_SHUTTER_TIME_H, SC035HGS_FETCH_EXP_H(u32_val));
+        ret |= sc035hgs_write(dev->sccb_handle, SC035HGS_REG_SHUTTER_TIME_L, SC035HGS_FETCH_EXP_L(u32_val));
+        ret |= sc035hgs_write(dev->sccb_handle, SC035HGS_REG_GROUP_HOLD, SC035HGS_GROUP_HOLD_LUNCH);
+        if (ret == ESP_OK) {
+            cam_sc035hgs->sc035hgs_para.exposure_val = u32_val;
+        }
+        break;
+    }
+    case ESP_CAM_SENSOR_GAIN: {
+        uint32_t u32_val = *(uint32_t *)arg;
+        ESP_LOGD(TAG, "again_fine %" PRIx8 ", again_coarse %" PRIx8 ", dgain_fine %" PRIx8 ", dgain_coarse %" PRIx8, sc035hgs_gain_map[u32_val].again_fine, 
+        sc035hgs_gain_map[u32_val].again_coarse, 
+        sc035hgs_gain_map[u32_val].dgain_fine, 
+        sc035hgs_gain_map[u32_val].dgain_coarse);
+
+        ret = sc035hgs_set_reg_bits(dev->sccb_handle,
+                           SC035HGS_REG_FINE_AGAIN, 2, 3,
+                           sc035hgs_gain_map[u32_val].again_fine);
+        ret |= sc035hgs_write(dev->sccb_handle,
+                            SC035HGS_REG_COARSE_AGAIN,
+                            sc035hgs_gain_map[u32_val].again_coarse);
+        ret |= sc035hgs_set_reg_bits(dev->sccb_handle,
+                            SC035HGS_REG_FINE_DGAIN, 0, 2,
+                            sc035hgs_gain_map[u32_val].dgain_fine);
+        ret |= sc035hgs_write(dev->sccb_handle,
+                            SC035HGS_REG_COARSE_DGAIN,
+                            sc035hgs_gain_map[u32_val].dgain_coarse);
+        if (ret == ESP_OK) {
+            cam_sc035hgs->sc035hgs_para.gain_index = u32_val;
+        }
+        break;
+    }
     case ESP_CAM_SENSOR_VFLIP: {
         int *value = (int *)arg;
 
@@ -244,6 +526,7 @@ static esp_err_t sc035hgs_set_format(esp_cam_sensor_device_t *dev, const esp_cam
     ESP_CAM_SENSOR_NULL_POINTER_CHECK(TAG, dev);
 
     esp_err_t ret = ESP_OK;
+    struct sc035hgs_cam *cam_sc035hgs = (struct sc035hgs_cam *)dev->priv;
     /* Depending on the interface type, an available configuration is automatically loaded.
     You can set the output format of the sensor without using query_format().*/
     if (format == NULL) {
@@ -257,6 +540,9 @@ static esp_err_t sc035hgs_set_format(esp_cam_sensor_device_t *dev, const esp_cam
     }
 
     dev->cur_format = format;
+    // init para
+    cam_sc035hgs->sc035hgs_para.exposure_val = dev->cur_format->isp_info->isp_v1_info.exp_def;
+    cam_sc035hgs->sc035hgs_para.gain_index = dev->cur_format->isp_info->isp_v1_info.gain_def;
 
     return ret;
 }
@@ -382,6 +668,10 @@ static esp_err_t sc035hgs_delete(esp_cam_sensor_device_t *dev)
 {
     ESP_LOGD(TAG, "del sc035hgs (%p)", dev);
     if (dev) {
+        if (dev->priv) {
+            free(dev->priv);
+            dev->priv = NULL;
+        }
         free(dev);
         dev = NULL;
     }
@@ -404,6 +694,8 @@ static const esp_cam_sensor_ops_t sc035hgs_ops = {
 esp_cam_sensor_device_t *sc035hgs_detect(esp_cam_sensor_config_t *config)
 {
     esp_cam_sensor_device_t *dev = NULL;
+    struct sc035hgs_cam *cam_sc035hgs;
+
     if (config == NULL) {
         return NULL;
     }
@@ -414,6 +706,13 @@ esp_cam_sensor_device_t *sc035hgs_detect(esp_cam_sensor_config_t *config)
         return NULL;
     }
 
+    cam_sc035hgs = heap_caps_calloc(1, sizeof(struct sc035hgs_cam), MALLOC_CAP_DEFAULT);
+    if (!cam_sc035hgs) {
+        ESP_LOGE(TAG, "failed to calloc cam");
+        free(dev);
+        return NULL;
+    }
+
     dev->name = (char *)SC035HGS_SENSOR_NAME;
     dev->sccb_handle = config->sccb_handle;
     dev->xclk_pin = config->xclk_pin;
@@ -421,6 +720,7 @@ esp_cam_sensor_device_t *sc035hgs_detect(esp_cam_sensor_config_t *config)
     dev->pwdn_pin = config->pwdn_pin;
     dev->sensor_port = config->sensor_port;
     dev->ops = &sc035hgs_ops;
+    dev->priv = cam_sc035hgs;
     dev->cur_format = &sc035hgs_format_info[CONFIG_CAMERA_SC035HGS_MIPI_IF_FORMAT_INDEX_DAFAULT];
 
     // Configure sensor power, clock, and SCCB port
@@ -442,6 +742,7 @@ esp_cam_sensor_device_t *sc035hgs_detect(esp_cam_sensor_config_t *config)
 
 err_free_handler:
     sc035hgs_power_off(dev);
+    free(dev->priv);
     free(dev);
 
     return NULL;
