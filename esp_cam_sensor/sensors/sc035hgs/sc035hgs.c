@@ -35,9 +35,9 @@ static const esp_cam_sensor_isp_info_t sc035hgs_isp_info[] = {
     {
         .isp_v1_info = {
             .version = SENSOR_ISP_INFO_VERSION_DEFAULT,
-            .pclk = 81000000,
-            .vts = 725,
-            .hts = 525,
+            .pclk = 50056704,
+            .vts = 0x394,
+            .hts = 0x470,
             .bayer_type = ESP_CAM_SENSOR_BAYER_BGGR,
         }
     }

@@ -20,6 +20,10 @@ extern "C" {
 #define SC035HGS_REG_DELAY       0xfefe
 #define SC035HGS_REG_SLEEP_MODE  0x0100
 
+#define SC035HGS_REG_GROUP_HOLD  0x3812
+#define SC035HGS_REG_BLC_CTRL0   0x3900
+#define SC035HGS_REG_BLC_CTRL1   0x3902
+
 #ifdef __cplusplus
 }
 #endif
