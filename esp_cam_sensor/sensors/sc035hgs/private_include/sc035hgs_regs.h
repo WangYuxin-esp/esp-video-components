@@ -18,7 +18,7 @@ extern "C" {
 #define SC035HGS_REG_ID_LOW      0x3108
 
 #define SC035HGS_REG_DELAY       0xfefe
-#define SC035HGS_REG_SLEEP_MODE  0x3100
+#define SC035HGS_REG_SLEEP_MODE  0x0100
 
 #ifdef __cplusplus
 }

@@ -149,9 +149,12 @@ static esp_err_t sc035hgs_get_sensor_id(esp_cam_sensor_device_t *dev, esp_cam_se
 
 static esp_err_t sc035hgs_set_stream(esp_cam_sensor_device_t *dev, int enable)
 {
+    esp_err_t ret = ESP_FAIL;
+    ret = sc035hgs_write(dev->sccb_handle, SC035HGS_REG_SLEEP_MODE, enable ? 0x01 : 0x00);
+
     dev->stream_status = enable;
     ESP_LOGD(TAG, "Stream=%d", enable);
-    return ESP_OK;
+    return ret;
 }
 
 static esp_err_t sc035hgs_set_mirror(esp_cam_sensor_device_t *dev, int enable)

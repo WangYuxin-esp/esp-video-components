@@ -19,7 +19,8 @@ extern "C" {
 //Cleaned_0x18_SC035HGS_MIPI_20Minput_1lane_10bit_500Mbps_640x480_48.050fps
 static const sc035hgs_reginfo_t mipi_20Minput_1lane_640x480_raw10_48fps[] = {
     {0x0103, 0x01},
-    {0x0100, 0x00}, // sleep en
+    {SC035HGS_REG_DELAY, 0x08},
+    {SC035HGS_REG_SLEEP_MODE, 0x00}, // sleep en
     {0x36e9, 0x80},
     {0x36f9, 0x80},
     {0x3000, 0x00},
@@ -125,7 +126,7 @@ static const sc035hgs_reginfo_t mipi_20Minput_1lane_640x480_raw10_48fps[] = {
     {0x598f, 0x54},
     {0x36e9, 0x04},
     {0x36f9, 0x04},
-    {0x0100, 0x01}, // sleep dis, normal work
+    // {SC035HGS_REG_SLEEP_MODE, 0x01}, // sleep dis, normal work
     {0x4418, 0x0a},
     {0x363d, 0x10},
     {0x4419, 0x80},
