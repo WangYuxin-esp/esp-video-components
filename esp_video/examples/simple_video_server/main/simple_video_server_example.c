@@ -25,6 +25,10 @@
 #include "mdns.h"
 #include "lwip/apps/netbiosns.h"
 
+#include "esp_video_ioctl.h"
+
+#include "app_ov5647_custom_settings.h"
+
 // video frame buffer count, too large value may cause memory allocation fails.
 #define EXAMPLE_VIDEO_BUFFER_COUNT   2
 #define MEMORY_TYPE                  V4L2_MEMORY_MMAP
@@ -144,6 +148,8 @@ int app_video_open(char *dev, example_fmt_t init_fmt)
     struct v4l2_format default_format;
     struct v4l2_capability capability;
     const int type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    struct v4l2_ext_controls controls;
+    struct v4l2_ext_control control[1];
 
     int fd = open(dev, O_RDONLY);
     if (fd < 0) {
@@ -172,18 +178,33 @@ int app_video_open(char *dev, example_fmt_t init_fmt)
 
     ESP_LOGI(TAG, "width=%" PRIu32 " height=%" PRIu32, default_format.fmt.pix.width, default_format.fmt.pix.height);
 
-    if (default_format.fmt.pix.pixelformat != init_fmt) {
-        struct v4l2_format format = {
-            .type = type,
-            .fmt.pix.width = default_format.fmt.pix.width,
-            .fmt.pix.height = default_format.fmt.pix.height,
-            .fmt.pix.pixelformat = init_fmt,
-        };
+    // if (default_format.fmt.pix.pixelformat != init_fmt) {
+    //     struct v4l2_format format = {
+    //         .type = type,
+    //         .fmt.pix.width = default_format.fmt.pix.width,
+    //         .fmt.pix.height = default_format.fmt.pix.height,
+    //         .fmt.pix.pixelformat = init_fmt,
+    //     };
 
-        if (ioctl(fd, VIDIOC_S_FMT, &format) != 0) {
-            ESP_LOGE(TAG, "failed to set format");
-            goto exit_0;
-        }
+    //     if (ioctl(fd, VIDIOC_S_FMT, &format) != 0) {
+    //         ESP_LOGE(TAG, "failed to set format");
+    //         goto exit_0;
+    //     }
+    // }
+
+        /* Set custom register configuration */
+    if (ioctl(fd, VIDIOC_S_SENSOR_FMT, &custom_format_info) != 0) {
+        ESP_LOGW(TAG, "failed to set custom fmt");
+        goto exit_0;
+    }
+
+    controls.ctrl_class = V4L2_CTRL_CLASS_USER;
+    controls.count      = 1;
+    controls.controls   = control;
+    control[0].id       = V4L2_CID_VFLIP;
+    control[0].value    = 0;
+    if (ioctl(fd, VIDIOC_S_EXT_CTRLS, &controls) != 0) {
+        ESP_LOGW(TAG, "failed to mirror the frame horizontally and skip this step");
     }
 
     return fd;
