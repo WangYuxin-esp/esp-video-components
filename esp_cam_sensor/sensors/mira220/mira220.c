@@ -69,6 +69,15 @@ static const esp_cam_sensor_isp_info_t mira220_isp_info[] = {
             .hts = 1024,
             .bayer_type = ESP_CAM_SENSOR_BAYER_BGGR,
         }
+    },
+    {
+        .isp_v1_info = {
+            .version = SENSOR_ISP_INFO_VERSION_DEFAULT,
+            .pclk = 25190400,
+            .vts = 600,  // 600 + 340
+            .hts = 1024,
+            .bayer_type = ESP_CAM_SENSOR_BAYER_BGGR,
+        }
     }
 };
 
@@ -85,6 +94,24 @@ static const esp_cam_sensor_format_t mira220_format_info[] = {
         .regs_size = ARRAY_SIZE(init_reglist_MIPI_2lane_1600_1400_25fps),
         .fps = 6,
         .isp_info = &mira220_isp_info[0],
+        .mipi_info = {
+            .mipi_clk = 200000000,
+            .lane_num = 2,
+            .line_sync_en = false,
+        },
+        .reserved = NULL,
+    },
+    {
+        .name = "MIPI_2lane_RAW12_1280_720_25fps",
+        .format = ESP_CAM_SENSOR_PIXFORMAT_RAW8,
+        .port = ESP_CAM_SENSOR_MIPI_CSI,
+        .xclk = 38400000,
+        .width = 1280,
+        .height = 720,
+        .regs = init_reglist_MIPI_2lane_1280_720_25fps,
+        .regs_size = ARRAY_SIZE(init_reglist_MIPI_2lane_1280_720_25fps),
+        .fps = 25,
+        .isp_info = &mira220_isp_info[1],
         .mipi_info = {
             .mipi_clk = 200000000,
             .lane_num = 2,

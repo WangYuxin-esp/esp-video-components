@@ -23,14 +23,15 @@ if CAMERA_MIRA220
             When the sensor is in stream off state, the format can be changed.
     
         config CAMERA_MIRA220_MIPI_RAW12_1600_1400_25fps
-            bool "MIRA220_MIPI_RAW12_1600_1400_25fps MIPI 2lane 38.4M input"
-                                    
+            bool "RAW12 1600x1400 25fps, MIPI 2lane 38.4M input"
+        config CAMERA_MIRA220_MIPI_RAW8_1280_720_25fps
+            bool "RAW8 1280x720 25fps, MIPI 2lane 38.4M input"                        
     endchoice # CAMERA_MIRA220_MIPI_DEFAULT_FMT
 
     config CAMERA_MIRA220_MIPI_IF_FORMAT_INDEX_DEFAULT
         int
         default 0 if CAMERA_MIRA220_MIPI_RAW12_1600_1400_25fps
-
+        default 1 if CAMERA_MIRA220_MIPI_RAW8_1280_720_25fps
         help
             Set the configuration loaded by default for the MIPI interface.
             More information can be obtained by calling the query_support_formats().
