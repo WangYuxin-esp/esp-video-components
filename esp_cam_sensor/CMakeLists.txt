@@ -104,6 +104,12 @@ if(CONFIG_CAMERA_BF3A03)
     list(APPEND priv_include_dirs "sensors/bf3a03/private_include")
 endif()
 
+if(CONFIG_CAMERA_MIRA220)
+    list(APPEND srcs "sensors/mira220/mira220.c")
+    list(APPEND include_dirs "sensors/mira220/include")
+    list(APPEND priv_include_dirs "sensors/mira220/private_include")
+endif()
+
 if(CONFIG_CAM_MOTOR_DW9714)
     list(APPEND srcs "motors/dw9714/dw9714.c")
     list(APPEND include_dirs "motors/dw9714/include")
@@ -175,6 +181,10 @@ endif()
 
 if(CONFIG_CAMERA_BF3A03_AUTO_DETECT_DVP_INTERFACE_SENSOR)
     target_link_libraries(${COMPONENT_LIB} INTERFACE "-u bf3a03_detect")
+endif()
+
+if(CONFIG_CAMERA_MIRA220_AUTO_DETECT_MIPI_INTERFACE_SENSOR)
+    target_link_libraries(${COMPONENT_LIB} INTERFACE "-u mira220_detect")
 endif()
 
 if(CONFIG_CAM_MOTOR_DW9714_AUTO_DETECT)
