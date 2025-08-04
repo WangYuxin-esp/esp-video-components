@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2024-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -55,6 +55,20 @@ static const esp_cam_sensor_format_t sc101iot_format_info[] = {
         .height = 720,
         .regs = DVP_8bit_20Minput_1280x720_yuv422_25fps,
         .regs_size = ARRAY_SIZE(DVP_8bit_20Minput_1280x720_yuv422_25fps),
+        .fps = 25,
+        .isp_info = NULL,
+        .mipi_info = {},
+        .reserved = NULL,
+    },
+    {
+        .name = "DVP_8bit_12Minput_YUV422_320x240_25fps",
+        .format = ESP_CAM_SENSOR_PIXFORMAT_YUV422,
+        .port = ESP_CAM_SENSOR_DVP,
+        .xclk = 12000000,
+        .width = 320,
+        .height = 240,
+        .regs = DVP_8bit_20Minput_320x240_yuv422_25fps,
+        .regs_size = ARRAY_SIZE(DVP_8bit_20Minput_320x240_yuv422_25fps),
         .fps = 25,
         .isp_info = NULL,
         .mipi_info = {},
