@@ -172,6 +172,7 @@ static esp_err_t sc101iot_get_sensor_id(esp_cam_sensor_device_t *dev, esp_cam_se
     esp_err_t ret = ESP_FAIL;
     uint8_t pid_h, pid_l;
 
+    delay_ms(4);
     ret = sc101iot_read_a16v8(dev->sccb_handle, SC101IOT_REG_ID_HIGH, &pid_h);
     if (ret != ESP_OK) {
         return ret;

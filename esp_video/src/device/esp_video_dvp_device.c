@@ -235,7 +235,12 @@ static esp_err_t dvp_video_start(struct esp_video *video, uint32_t type)
         .input_data_color_type = dvp_video->in_color,
         .pin_dont_init = true,
         .pic_format_jpeg = CAPTURE_VIDEO_GET_FORMAT_PIXEL_FORMAT(video) == V4L2_PIX_FMT_JPEG,
+<<<<<<< HEAD
 #if DVP_DRIVER_HAS_EXTERNAL_XTAL
+=======
+        .external_xtal = true,
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+>>>>>>> f73bff2 (fix: update sc101iot init delay and video init in web)
         .external_xtal = true,
 #endif
     };

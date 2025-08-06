@@ -782,6 +782,8 @@ void app_main(void)
         ESP_ERROR_CHECK(nvs_flash_init());
     }
 
+    ESP_ERROR_CHECK(example_video_init());
+
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
 
@@ -794,8 +796,6 @@ void app_main(void)
      * examples/protocols/README.md for more information about this function.
      */
     ESP_ERROR_CHECK(example_connect());
-
-    ESP_ERROR_CHECK(example_video_init());
 
     web_cam_video_config_t config[] = {
 #if EXAMPLE_ENABLE_MIPI_CSI_CAM_SENSOR
