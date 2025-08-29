@@ -37,7 +37,7 @@
     ((ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 3)) && (ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 5, 0)))
 #define DVP_DRIVER_HAS_EXTERNAL_XTAL    1
 #else
-#define DVP_DRIVER_HAS_EXTERNAL_XTAL    0
+#define DVP_DRIVER_HAS_EXTERNAL_XTAL    1
 #endif
 
 struct dvp_video {
