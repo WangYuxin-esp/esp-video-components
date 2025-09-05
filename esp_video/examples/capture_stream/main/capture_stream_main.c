@@ -18,6 +18,8 @@
 #if CONFIG_EXAMPLE_VIDEO_BUFFER_TYPE_USER
 #include "esp_heap_caps.h"
 
+#include "esp_cam_sensor_xclk.h"
+
 #define MEMORY_TYPE V4L2_MEMORY_USERPTR
 #define MEMORY_ALIGN 64
 #else
@@ -382,9 +384,31 @@ exit_0:
     return ret;
 }
 
+#define XCLK_OUTPUT_FREQUENCY   (24000000) // Frequency in Hertz. Set frequency at 24MHz
+#define XCLK_OUTPUT_IO          (5) // Notes, define the output GPIO according to your board
+
 void app_main(void)
 {
     esp_err_t ret = ESP_OK;
+
+    esp_cam_sensor_xclk_handle_t xclk_handle = NULL;
+    esp_cam_sensor_xclk_config_t cam_xclk_config = {
+        .esp_clock_router_cfg = {
+            .xclk_pin = XCLK_OUTPUT_IO,
+            .xclk_freq_hz = XCLK_OUTPUT_FREQUENCY,
+        }
+    };
+    if (esp_cam_sensor_xclk_allocate(ESP_CAM_SENSOR_XCLK_ESP_CLOCK_ROUTER, &xclk_handle) != ESP_OK) {
+        ESP_LOGE(TAG, "xclk allocate failed.");
+        return;
+    }
+    // Notes, define the output GPIO according to your board
+    if (esp_cam_sensor_xclk_start(xclk_handle, &cam_xclk_config) != ESP_OK) {
+        esp_cam_sensor_xclk_free(xclk_handle);
+        ESP_LOGE(TAG, "xclk start failed.");
+        return;
+    }
+    ESP_LOGI(TAG, "xclk start");
 
     ret = example_video_init();
     ESP_GOTO_ON_ERROR(ret, clean1, TAG, "Camera init failed");
