@@ -100,6 +100,28 @@ static const esp_cam_sensor_isp_info_t gc2607_isp_info_mipi[] = {
             .bayer_type = ESP_CAM_SENSOR_BAYER_GRBG,
         }
     },
+    {
+        .isp_v1_info = {
+            .version = SENSOR_ISP_INFO_VERSION_DEFAULT,
+            .pclk = 84000000,
+            .vts = 1640,
+            .hts = 2048,
+            .gain_def = 0,
+            .exp_def = 0x0438,
+            .bayer_type = ESP_CAM_SENSOR_BAYER_GRBG,
+        }
+    },
+    {
+        .isp_v1_info = {
+            .version = SENSOR_ISP_INFO_VERSION_DEFAULT,
+            .pclk = 84000000,
+            .vts = 1367,
+            .hts = 2048,
+            .gain_def = 0,
+            .exp_def = 0x0438,
+            .bayer_type = ESP_CAM_SENSOR_BAYER_GRBG,
+        }
+    },
 };
 
 static const esp_cam_sensor_format_t gc2607_format_info_mipi[] = {
@@ -121,6 +143,42 @@ static const esp_cam_sensor_format_t gc2607_format_info_mipi[] = {
         },
         .reserved = NULL,
     },
+    {
+        .name = "MIPI_2lane_24Minput_raw10_1920x1080_30fps",
+        .format = ESP_CAM_SENSOR_PIXFORMAT_RAW10,
+        .port = ESP_CAM_SENSOR_MIPI_CSI,
+        .xclk = 24000000,
+        .width = 1920,
+        .height = 1080,
+        .regs = mipi_24Minput_2lane_1920x1080_raw10_30fps,
+        .regs_size = ARRAY_SIZE(mipi_24Minput_2lane_1920x1080_raw10_30fps),
+        .fps = 30,
+        .isp_info = &gc2607_isp_info_mipi[1],
+        .mipi_info = {
+            .mipi_clk = 672000000,
+            .lane_num = 2,
+            .line_sync_en = false,
+        },
+        .reserved = NULL,
+    },
+    {
+        .name = "MIPI_2lane_24Minput_raw10_960x540_30fps",
+        .format = ESP_CAM_SENSOR_PIXFORMAT_RAW10,
+        .port = ESP_CAM_SENSOR_MIPI_CSI,
+        .xclk = 24000000,
+        .width = 960,
+        .height = 540,
+        .regs = mipi_24Minput_2lane_960x540_raw10_29fps,
+        .regs_size = ARRAY_SIZE(mipi_24Minput_2lane_960x540_raw10_29fps),
+        .fps = 30,
+        .isp_info = &gc2607_isp_info_mipi[2],
+        .mipi_info = {
+            .mipi_clk = 336000000,
+            .lane_num = 2,
+            .line_sync_en = false,
+        },
+        .reserved = NULL,
+    }
 };
 #endif
 
