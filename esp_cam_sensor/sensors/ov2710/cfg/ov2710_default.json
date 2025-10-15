@@ -191,15 +191,15 @@
                 [
                     {
                         "luma": 31.1,
-                        "gamma_param": 0.51
+                        "gamma_param": 0.62
                     },
                     {
                         "luma": 75.1,
-                        "gamma_param": 0.53
+                        "gamma_param": 0.68
                     },
                     {
                         "luma": 132.1,
-                        "gamma_param": 0.56
+                        "gamma_param": 0.76
                     }
                 ]
             },    
@@ -434,22 +434,30 @@
         {
             "model": 0,
             "init_value": 48,
-            "delay_frames": 3,
+            "delay_frames": 4,
             "luma_env": "env.luma.avg",
-            "min_ae_value_step": 5,
+            "min_ae_value_step": 4,
             "luma_lut":
             [
                 {
-                    "luma": 250,
+                    "state": "indoor 0",
+                    "luma": 20,
                     "ae_value": 48
                 },
                 {
-                    "luma": 500,
+                    "state": "indoor 1",
+                    "luma": 60,
+                    "ae_value": 56
+                },
+                {
+                    "state": "outdoor 0",
+                    "luma": 190,
                     "ae_value": 60
                 },
                 {
-                    "luma": 750,
-                    "ae_value": 75
+                    "state": "outdoor 1",
+                    "luma": 390,
+                    "ae_value": 64
                 }
             ]
         }
