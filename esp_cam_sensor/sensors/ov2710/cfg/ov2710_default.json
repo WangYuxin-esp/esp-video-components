@@ -433,7 +433,7 @@
         "atc":
         {
             "model": 0,
-            "init_value": 48,
+            "init_value": 52,
             "delay_frames": 4,
             "luma_env": "env.luma.avg",
             "min_ae_value_step": 4,
@@ -442,7 +442,7 @@
                 {
                     "state": "indoor 0",
                     "luma": 20,
-                    "ae_value": 48
+                    "ae_value": 52
                 },
                 {
                     "state": "indoor 1",
