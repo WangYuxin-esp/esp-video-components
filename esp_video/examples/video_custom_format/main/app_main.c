@@ -18,6 +18,8 @@
 #include "app_bf3901_custom_settings.h"
 #elif CONFIG_CAMERA_SC2336
 #include "app_sc2336_custom_settings.h"
+#elif CONFIG_CAMERA_GC2145
+#include "app_gc2145_custom_settings.h"
 #else
 #error "No supported camera sensor selected, only support BF3901(SPI interface), SC2336(MIPI-CSI interface)"
 #endif

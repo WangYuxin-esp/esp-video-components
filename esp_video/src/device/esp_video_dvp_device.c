@@ -34,7 +34,7 @@
  *        IDF version v5.4.x(x>=3) supports external xtal for DVP
  */
 #if (ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 1)) || \
-    ((ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 3)) && (ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 5, 0)))
+    ((ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 2)) && (ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 5, 0)))
 #define DVP_DRIVER_HAS_EXTERNAL_XTAL    1
 #else
 #define DVP_DRIVER_HAS_EXTERNAL_XTAL    0
