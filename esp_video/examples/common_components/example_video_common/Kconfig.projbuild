@@ -497,12 +497,18 @@ menu "Example Video Initialization Configuration"
                     help
                         Use dedicated clock routing hardware for camera clock.
                         Provides better performance and lower jitter when available.
+
+                config EXAMPLE_SPI_CAM_0_XCLK_USE_EXTERNAL_CLOCK
+                    bool "External Clock"
+                    help
+                        Use an external clock generator to provide the camera clock.
             endchoice
 
             config EXAMPLE_SPI_CAM_0_XCLK_FREQ
                 int "XCLK Frequency (Hz)"
                 default 24000000 if IDF_TARGET_ESP32P4 || IDF_TARGET_ESP32C5
                 default 20000000
+                depends on !EXAMPLE_SPI_CAM_0_XCLK_USE_EXTERNAL_CLOCK
                 help
                     Master clock frequency for SPI camera sensor.
 
@@ -864,12 +870,18 @@ menu "Example Video Initialization Configuration"
                     help
                         Use dedicated clock routing hardware for camera clock.
                         Provides better performance and lower jitter when available.
+
+                config EXAMPLE_SPI_CAM_1_XCLK_USE_EXTERNAL_CLOCK
+                    bool "External Clock"
+                    help
+                        Use an external clock generator to provide the camera clock.
             endchoice
 
             config EXAMPLE_SPI_CAM_1_XCLK_FREQ
                 int "XCLK Frequency (Hz)"
                 default 24000000 if EXAMPLE_SPI_CAM_1_XCLK_USE_CLOCK_ROUTER
                 default 20000000 if EXAMPLE_SPI_CAM_1_XCLK_USE_LEDC
+                depends on !EXAMPLE_SPI_CAM_1_XCLK_USE_EXTERNAL_CLOCK
                 help
                     Master clock frequency for SPI camera sensor.
 

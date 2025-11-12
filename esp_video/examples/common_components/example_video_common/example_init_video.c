@@ -98,7 +98,7 @@ static const esp_video_init_spi_config_t s_spi_config[] = {
         .spi_cs_pin = EXAMPLE_SPI_CAM_0_CS_PIN,
         .spi_sclk_pin = EXAMPLE_SPI_CAM_0_SCLK_PIN,
         .spi_data0_io_pin = EXAMPLE_SPI_CAM_0_DATA0_IO_PIN,
-
+#if !CONFIG_EXAMPLE_SPI_CAM_0_XCLK_USE_EXTERNAL_CLOCK
         .xclk_source = EXAMPLE_SPI_CAM_0_XCLK_RESOURCE,
         .xclk_pin = EXAMPLE_SPI_CAM_0_XCLK_PIN,
         .xclk_freq = EXAMPLE_SPI_CAM_0_XCLK_FREQ,
@@ -109,6 +109,7 @@ static const esp_video_init_spi_config_t s_spi_config[] = {
             .channel = EXAMPLE_SPI_CAM_0_XCLK_TIMER_CHANNEL,
         },
 #endif /* CONFIG_EXAMPLE_SPI_CAM_XCLK_USE_LEDC */
+#endif
     },
 
 #if EXAMPLE_ENABLE_SPI_CAM_1_SENSOR
@@ -131,7 +132,7 @@ static const esp_video_init_spi_config_t s_spi_config[] = {
         .spi_cs_pin = EXAMPLE_SPI_CAM_1_CS_PIN,
         .spi_sclk_pin = EXAMPLE_SPI_CAM_1_SCLK_PIN,
         .spi_data0_io_pin = EXAMPLE_SPI_CAM_1_DATA0_IO_PIN,
-
+#if !CONFIG_EXAMPLE_SPI_CAM_0_XCLK_USE_EXTERNAL_CLOCK
         .xclk_source = EXAMPLE_SPI_CAM_1_XCLK_RESOURCE,
         .xclk_pin = EXAMPLE_SPI_CAM_1_XCLK_PIN,
         .xclk_freq = EXAMPLE_SPI_CAM_1_XCLK_FREQ,
@@ -142,6 +143,7 @@ static const esp_video_init_spi_config_t s_spi_config[] = {
             .channel = EXAMPLE_SPI_CAM_1_XCLK_TIMER_CHANNEL,
         },
 #endif /* CONFIG_EXAMPLE_SPI_CAM_1_XCLK_USE_LEDC */
+#endif
     },
 #endif /* EXAMPLE_ENABLE_SPI_CAM_1_SENSOR */
 };
@@ -202,6 +204,28 @@ static esp_cam_sensor_xclk_handle_t s_xclk_handle;
 static bool s_is_init = false;
 static const char *TAG = "example_init_video";
 
+#if CONFIG_EXAMPLE_SPI_CAM_0_XCLK_USE_EXTERNAL_CLOCK
+#include "esp_cam_ctlr_dvp.h"
+#include "esp_private/esp_cam_dvp.h"
+#include "esp_cam_ctlr.h"
+static esp_err_t example_init_external_clock(void)
+{
+#if CONFIG_SOC_LCDCAM_CAM_SUPPORTED
+    return esp_cam_ctlr_dvp_start_clock(0, EXAMPLE_SPI_CAM_0_XCLK_PIN, CAM_CLK_SRC_PLL240M, 24000000);
+#else
+    return ESP_OK;
+#endif
+}
+static esp_err_t example_deinit_external_clock(void)
+{
+#if CONFIG_SOC_LCDCAM_CAM_SUPPORTED
+    return esp_cam_ctlr_dvp_deinit(0);
+#else
+    return ESP_OK;
+#endif
+}
+#endif
+
 /**
  * @brief Initialize the video system
  *
@@ -216,6 +240,9 @@ esp_err_t example_video_init(void)
     }
 
     const esp_video_init_config_t *cam_config_ptr = &s_cam_config;
+#if CONFIG_EXAMPLE_SPI_CAM_0_XCLK_USE_EXTERNAL_CLOCK
+    ESP_RETURN_ON_ERROR(example_init_external_clock(), TAG, "failed to init externtal clock");
+#endif
 
 #if CONFIG_EXAMPLE_SCCB_I2C_INIT_BY_APP
     ESP_RETURN_ON_ERROR(i2c_new_master_bus(&s_bus_config, &s_i2cbus_handle), TAG, "failed to initialize i2c bus");
@@ -346,7 +373,9 @@ esp_err_t example_video_deinit(void)
     if (!s_is_init) {
         return ESP_OK;
     }
-
+#if CONFIG_EXAMPLE_SPI_CAM_0_XCLK_USE_EXTERNAL_CLOCK
+    ESP_RETURN_ON_ERROR(example_deinit_external_clock(), TAG, "failed to deinitialize externtal clock");
+#endif
     ESP_RETURN_ON_ERROR(esp_video_deinit(), TAG, "failed to deinitialize video");
 
 #if EXAMPLE_MIPI_CSI_XCLK_PIN > 0
