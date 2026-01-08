@@ -8,6 +8,7 @@
 - Added the 2-bit data I/O mode for the parallel I/O interface of the SPI camera interface driver.
   - The parallel I/O interface is supported in ESP-IDF version 5.5.2 and later.
 - Added OV9281 MIPI camera sensor driver.
+- Added Pivariety MIPI camera sensor driver.
 
 ## 1.7.0
 
