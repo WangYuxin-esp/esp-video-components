@@ -650,7 +650,7 @@ static esp_err_t new_web_cam(const web_cam_video_config_t *config, int config_co
         }
     }
 
-    // init_isp_dev(wc->video[0].fd);
+    init_isp_dev(wc->video[0].fd);
 
     *ret_wc = wc;
 

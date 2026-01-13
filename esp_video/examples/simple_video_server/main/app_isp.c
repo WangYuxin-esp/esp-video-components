@@ -23,16 +23,16 @@
 
 static const char *TAG = "app_isp";
 
-#define EXP_GAIN_PARA_EN      (1)
-#define BF_PARA_EN            (1)
-#define LSC_PARA_EN           (1)
+#define EXP_GAIN_PARA_EN      (0)
+#define BF_PARA_EN            (0)
+#define LSC_PARA_EN           (0)
 #define DEM_PARA_EN           (1)
 #define WB_PARA_EN            (0)
 #define CCM_PARA_EN           (0)
 #define GAMMA_PARA_EN         (0)
 #define SHARPEN_PARA_EN       (0)
 #define COLOR_PARA_EN         (0)
-#define BLC_PARA_EN           (1)
+#define BLC_PARA_EN           (0)
 
 #if LSC_PARA_EN
 // LSC Matrices: Supported resolution is (1080, 1920), calibration mode is mode1
