@@ -24,7 +24,7 @@
 static const char *TAG = "app_isp";
 
 #define EXP_GAIN_PARA_EN      (0)
-#define BF_PARA_EN            (0)
+#define BF_PARA_EN            (1)
 #define LSC_PARA_EN           (0)
 #define DEM_PARA_EN           (1)
 #define WB_PARA_EN            (0)
@@ -32,7 +32,7 @@ static const char *TAG = "app_isp";
 #define GAMMA_PARA_EN         (0)
 #define SHARPEN_PARA_EN       (0)
 #define COLOR_PARA_EN         (0)
-#define BLC_PARA_EN           (0)
+#define BLC_PARA_EN           (1)
 
 #if LSC_PARA_EN
 // LSC Matrices: Supported resolution is (1080, 1920), calibration mode is mode1
@@ -114,15 +114,15 @@ static void config_exposure_time(int cam_fd, int32_t exposure)
     struct v4l2_ext_controls controls;
     struct v4l2_ext_control control[1];
 
-    qctrl.id = V4L2_CID_EXPOSURE;
+    qctrl.id = V4L2_CID_EXPOSURE_ABSOLUTE;
     ioctl(cam_fd, VIDIOC_QUERY_EXT_CTRL, &qctrl);
     ESP_LOGW(TAG, "EXP min: %d, EXP max:  %d, step:%d", (int)qctrl.minimum, (int)qctrl.maximum, (int)qctrl.step);
 
     controls.ctrl_class = V4L2_CID_CAMERA_CLASS;
     controls.count      = 1;
     controls.controls   = control;
-    control[0].id       = V4L2_CID_EXPOSURE;
-    control[0].value    = exposure;
+    control[0].id       = V4L2_CID_EXPOSURE_ABSOLUTE;
+    control[0].value    = exposure / 100;
     if (ioctl(cam_fd, VIDIOC_S_EXT_CTRLS, &controls) != 0) {
         ESP_LOGE(TAG, "failed to set exposure time");
     } else {
@@ -245,8 +245,8 @@ esp_err_t init_isp_dev(int cam_fd)
     ESP_RETURN_ON_FALSE(fd > 0, ESP_ERR_INVALID_ARG, TAG, "failed to open %s", "isp");
 
 #if EXP_GAIN_PARA_EN
-    config_exposure_time(cam_fd, 30 * 1000); // 30ms
-    config_pixel_gain(cam_fd, 3.000); // toatl gain
+    config_exposure_time(cam_fd, 20 * 1000); // 30ms
+    config_pixel_gain(cam_fd, 6.000); // toatl gain
 #endif
 
 #if BLC_PARA_EN
@@ -259,7 +259,7 @@ esp_err_t init_isp_dev(int cam_fd)
     // };
     esp_video_isp_blc_t blc = {
         .enable = true,
-        .top_left_offset = 0x10,
+        .top_left_offset = 0x0f,
         .top_right_offset = 0x10,
         .bottom_left_offset = 0x10,
         .bottom_right_offset = 0x10,

@@ -47,7 +47,7 @@ struct pivariety_cam {
 #define PIVARIETY_ENABLE_OUT_XCLK(pin,clk)
 #define PIVARIETY_DISABLE_OUT_XCLK(pin)
 
-#define PIVARIETY_EXP_MAX_OFFSET   0x25
+#define PIVARIETY_EXP_MAX_OFFSET   0x15
 
 #define PIVARIETY_FETCH_EXP_H(val)     (((val) >> 12) & 0xF)
 #define PIVARIETY_FETCH_EXP_M(val)     (((val) >> 4) & 0xFF)
@@ -1065,7 +1065,7 @@ static const esp_cam_sensor_isp_info_t pivariety_isp_info[] = {
             .hts = 19167,
             .tline_ns = 20282,
             .gain_def = 500, // gain table index
-            .exp_def = 0x4dc,
+            .exp_def = 0x2dc,
             .bayer_type = ESP_CAM_SENSOR_BAYER_RGGB,
         }
     },
@@ -1077,7 +1077,7 @@ static const esp_cam_sensor_isp_info_t pivariety_isp_info[] = {
             .hts = 16492,
             .tline_ns = 17451,
             .gain_def = 500, // gain table index
-            .exp_def = 0x4dc,
+            .exp_def = 0x2dc,
             .bayer_type = ESP_CAM_SENSOR_BAYER_RGGB,
         }
     },
@@ -1089,7 +1089,7 @@ static const esp_cam_sensor_isp_info_t pivariety_isp_info[] = {
             .hts = 17900,
             .tline_ns = 9417,
             .gain_def = 500, // gain table index
-            .exp_def = 1000,
+            .exp_def = 0x2dc,
             .bayer_type = ESP_CAM_SENSOR_BAYER_RGGB,
         }
     },
@@ -1101,7 +1101,7 @@ static const esp_cam_sensor_isp_info_t pivariety_isp_info[] = {
             .hts = 18900,    //2976,
             .tline_ns = 9617,
             .gain_def = 500, // gain table index
-            .exp_def = 1000,
+            .exp_def = 0x2dc,
             .bayer_type = ESP_CAM_SENSOR_BAYER_RGGB,
         }
     },
@@ -1113,7 +1113,7 @@ static const esp_cam_sensor_isp_info_t pivariety_isp_info[] = {
             .hts = 8276,    //2976,
             .tline_ns = 9522,
             .gain_def = 500, // gain table index
-            .exp_def = 1000,
+            .exp_def = 0x2dc,
             .bayer_type = ESP_CAM_SENSOR_BAYER_RGGB,
         }
     }
@@ -1289,7 +1289,7 @@ static esp_err_t pivariety_set_exp_val(esp_cam_sensor_device_t *dev, uint32_t u3
     uint32_t value_buf = MAX(u32_val, s_pivariety_exp_min);
     value_buf = MIN(value_buf, cam_pivariety->pivariety_para.exposure_max);
 
-    ESP_LOGW(TAG, "set exposure 0x%" PRIx32, value_buf);
+    ESP_LOGD(TAG, "set exposure 0x%" PRIx32", max:0x%" PRIx32, value_buf, cam_pivariety->pivariety_para.exposure_max);
 
     ret = pivariety_write(dev->sccb_handle, CTRL_ID_REG, V4L2_CID_EXPOSURE);
     ret |= pivariety_write(dev->sccb_handle, CTRL_VALUE_REG, value_buf);
@@ -1308,7 +1308,7 @@ static esp_err_t pivariety_set_total_gain_val(esp_cam_sensor_device_t *dev, uint
         u32_val = s_limited_abs_gain_index;
     }
 
-    ESP_LOGW(TAG, "gain %" PRIx32, pivariety_abs_gain_val_map[u32_val]);
+    ESP_LOGD(TAG, "gain %" PRIx32, pivariety_abs_gain_val_map[u32_val]);
     ret = pivariety_write(dev->sccb_handle, CTRL_ID_REG, V4L2_CID_ANALOGUE_GAIN);
     ret |= pivariety_write(dev->sccb_handle, CTRL_VALUE_REG, pivariety_abs_gain_val_map[u32_val]);
     if (ret == ESP_OK) {
@@ -1467,8 +1467,8 @@ static esp_err_t pivariety_set_format(esp_cam_sensor_device_t *dev, const esp_ca
     cam_pivariety->pivariety_para.exposure_val = dev->cur_format->isp_info->isp_v1_info.exp_def;
     cam_pivariety->pivariety_para.gain_index = dev->cur_format->isp_info->isp_v1_info.gain_def;
     // set default exp and gain to ensure default info is normal
-    // pivariety_set_exp_val(dev, dev->cur_format->isp_info->isp_v1_info.exp_def);
-    // pivariety_set_total_gain_val(dev, dev->cur_format->isp_info->isp_v1_info.gain_def);
+    pivariety_set_exp_val(dev, dev->cur_format->isp_info->isp_v1_info.exp_def);
+    pivariety_set_total_gain_val(dev, dev->cur_format->isp_info->isp_v1_info.gain_def);
 
     return ret;
 }
@@ -1535,7 +1535,7 @@ static esp_err_t pivariety_set_stream(esp_cam_sensor_device_t *dev, int enable)
                                    (void *)dev, ae_timer_callback);
     xTimerStart(ae_timer_handle, portMAX_DELAY);
 #endif
-    ESP_LOGW(TAG, "Stream=%d", enable);
+    ESP_LOGD(TAG, "Stream=%d", enable);
     return ret;
 }
 

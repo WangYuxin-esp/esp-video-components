@@ -1,6 +1,6 @@
 {
     "version": 1,
-    "SC202CS":
+    "PIVARIETY":
     {
         "agc":
         {
@@ -23,11 +23,11 @@
             "f_m0": 0.42,
             "luma_adjust":
             {
-                "target_low": 56,
-                "target_high": 64,
-                "target": 62,
+                "target_low": 61,
+                "target_high": 68,
+                "target": 64,
                 "low_threshold": 14,
-                "low_regions": 5,
+                "low_regions": 6,
                 "high_threshold": 239,
                 "high_regions": 3,
                 "weight":

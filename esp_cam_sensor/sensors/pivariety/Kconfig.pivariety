@@ -82,26 +82,6 @@ if CAMERA_PIVARIETY
             - 32000 (32x): Enhanced low-light performance
             - 63008 (63x): Maximum sensitivity (use with caution)
 
-    choice CAMERA_PIVARIETY_ABS_GAIN_MAP_PRIORITY
-        prompt "Gain control priority"
-        default CAMERA_PIVARIETY_DIG_GAIN_PRIORITY
-        help
-            Select the gain control strategy to balance image quality and noise.
-
-            The gain mapping affects noise levels and brightness transition smoothness.
-            Analog gain generally produces less noise than digital gain, but digital
-            gain provides smoother brightness transitions.
-
-        config CAMERA_PIVARIETY_ANA_GAIN_PRIORITY
-            bool "Analog gain priority"
-            help
-                Prioritize analog gain over digital gain for noise reduction.
-        config CAMERA_PIVARIETY_DIG_GAIN_PRIORITY
-            bool "Digital gain priority"
-            help
-                Prioritize digital gain over analog gain for smooth transitions.
-    endchoice # CAMERA_PIVARIETY_ABS_GAIN_MAP_PRIORITY
-
     choice CAMERA_PIVARIETY_IPA_JSON_CONFIGURATION_FILE
         prompt "IPA Configuration File"
         default CAMERA_PIVARIETY_DEFAULT_IPA_JSON_CONFIGURATION_FILE
