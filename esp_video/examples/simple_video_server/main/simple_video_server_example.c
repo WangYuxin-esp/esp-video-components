@@ -526,6 +526,9 @@ static esp_err_t init_web_cam_video(web_cam_video_t *video, const web_cam_video_
         format.fmt.pix.pixelformat = V4L2_PIX_FMT_RGB24;
         ESP_GOTO_ON_ERROR(ioctl(fd, VIDIOC_S_FMT, &format), fail0, TAG, "Failed set fmt to %s", config->dev_name);
         ESP_LOGI(TAG, "Set fmt");
+    } else {
+        format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+        ESP_GOTO_ON_ERROR(ioctl(fd, VIDIOC_G_FMT, &format), fail0, TAG, "Failed get fmt from %s", config->dev_name);
     }
 
     memset(&sparm, 0, sizeof(sparm));

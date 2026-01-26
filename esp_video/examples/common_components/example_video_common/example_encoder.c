@@ -51,6 +51,8 @@ esp_err_t example_encoder_init(example_encoder_config_t *config, example_encoder
         return ESP_ERR_INVALID_ARG;
     }
 
+    printf("F:%s\n", (char *)&config->pixel_format);
+
     esp_err_t ret = ESP_OK;
     example_encoder_t *encoder;
     uint32_t jpeg_enc_input_src_size;

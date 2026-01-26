@@ -376,6 +376,7 @@ static esp_err_t init_config(struct esp_video *video)
             .pixelformat = v4l2_format,
         },
     };
+
     ESP_RETURN_ON_ERROR(esp_video_config_buffer(video, &format, CSI_MEM_CAPS), TAG, "failed to configure stream buffer");
 
     return ESP_OK;
