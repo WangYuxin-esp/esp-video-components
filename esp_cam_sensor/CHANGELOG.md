@@ -14,6 +14,7 @@
 - Fixed spi slave build error caused by spicommon_xxx private api change.
 - Added LCD_CAM DVP driver for ESP32-S3.
 - Fixed JPEG quality parameter overflow in OV2640 dvp driver.
+- Added support for OV2640 qvga yuv422 yuyv and uyvy
 
 ## 1.7.0
 
