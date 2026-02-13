@@ -37,6 +37,13 @@ menu "Example Video Initialization Configuration"
                 Espressif ESP32-S3-EYE development board with integrated camera sensor
                 and LCD display for AI and computer vision applications.
 
+        config EXAMPLE_SELECT_ESP32C5_IOT
+            bool "ESP32-C5-IOT"
+            depends on IDF_TARGET_ESP32C5
+            help
+                Espressif ESP32-C5-IOT development board with integrated camera sensor
+                and LCD display for AI and computer vision applications.
+
         config EXAMPLE_SELECT_CUSTOMIZED_DEV_BOARD
             bool "Customized Development Board"
             help

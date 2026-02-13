@@ -28,6 +28,11 @@
 #include "lwip/apps/netbiosns.h"
 #include "example_video_common.h"
 
+#include "dl_image_process.hpp"
+#include "quirc.h"
+
+struct quirc *s_qr;
+
 #define EXAMPLE_CAMERA_VIDEO_BUFFER_NUMBER  CONFIG_EXAMPLE_CAMERA_VIDEO_BUFFER_NUMBER
 
 #define EXAMPLE_JPEG_ENC_QUALITY            CONFIG_EXAMPLE_JPEG_COMPRESSION_QUALITY
@@ -313,6 +318,11 @@ static esp_err_t camera_settings_handler(httpd_req_t *req)
     esp_err_t ret;
     char *content;
     web_cam_t *web_cam = (web_cam_t *)req->user_ctx;
+    int index, image_format, jpeg_quality;
+    cJSON *json_root;
+    cJSON *json_index;
+    cJSON *json_image_format;
+    cJSON *json_jpeg_quality;
 
     content = (char *)calloc(1, req->content_len + 1);
     ESP_RETURN_ON_FALSE(content, ESP_ERR_NO_MEM, TAG, "failed to allocate memory");
@@ -320,23 +330,23 @@ static esp_err_t camera_settings_handler(httpd_req_t *req)
     ESP_GOTO_ON_FALSE(httpd_req_recv(req, content, req->content_len) > 0, ESP_FAIL, fail0, TAG, "failed to recv content");
     ESP_LOGD(TAG, "content: %s", content);
 
-    cJSON *json_root = cJSON_Parse(content);
+    json_root = cJSON_Parse(content);
     free(content);
     content = NULL;
     ESP_GOTO_ON_FALSE(json_root, ESP_FAIL, fail0, TAG, "failed to parse JSON");
 
-    cJSON *json_index = cJSON_GetObjectItem(json_root, "index");
+    json_index = cJSON_GetObjectItem(json_root, "index");
     ESP_GOTO_ON_FALSE(json_index && cJSON_IsNumber(json_index), ESP_ERR_INVALID_ARG, fail1, TAG, "missing or invalid index field");
-    int index = json_index->valueint;
+    index = json_index->valueint;
     ESP_GOTO_ON_FALSE(index >= 0 && index < web_cam->video_count && is_valid_web_cam(&web_cam->video[index]), ESP_ERR_INVALID_ARG, fail1, TAG, "invalid index");
 
-    cJSON *json_image_format = cJSON_GetObjectItem(json_root, "image_format");
+    json_image_format = cJSON_GetObjectItem(json_root, "image_format");
     ESP_GOTO_ON_FALSE(json_image_format && cJSON_IsNumber(json_image_format), ESP_ERR_INVALID_ARG, fail1, TAG, "missing or invalid image_format field");
-    int image_format = json_image_format->valueint;
+    image_format = json_image_format->valueint;
 
-    cJSON *json_jpeg_quality = cJSON_GetObjectItem(json_root, "jpeg_quality");
+    json_jpeg_quality = cJSON_GetObjectItem(json_root, "jpeg_quality");
     ESP_GOTO_ON_FALSE(json_jpeg_quality && cJSON_IsNumber(json_jpeg_quality), ESP_ERR_INVALID_ARG, fail1, TAG, "missing or invalid jpeg_quality field");
-    int jpeg_quality = json_jpeg_quality->valueint;
+    jpeg_quality = json_jpeg_quality->valueint;
 
     ESP_LOGI(TAG, "JSON parse success - index:%d, image_format:%d, jpeg_quality:%d", index, image_format, jpeg_quality);
     cJSON_Delete(json_root);
@@ -396,6 +406,44 @@ static esp_err_t static_file_handler(httpd_req_t *req)
     return ESP_FAIL;
 }
 
+struct quirc_code s_q_code;
+struct quirc_data s_q_data;
+quirc_decode_error_t s_q_err;
+
+static esp_err_t image_ai_process(uint8_t *src_buf, uint32_t src_size)
+{
+    dl::image::img_t color = {.data = (void *)src_buf,
+                              .width = 240,
+                              .height = 320,
+                              .pix_type = dl::image::DL_IMAGE_PIX_TYPE_RGB565LE
+                             };
+
+    uint8_t *data = quirc_begin(s_qr, NULL, NULL);
+    dl::image::ImageTransformer T;
+
+    dl::image::img_t gray = {.data = data, .width = 240, .height = 320, .pix_type = dl::image::DL_IMAGE_PIX_TYPE_GRAY};
+    T.set_src_img(color).set_dst_img(gray).transform();
+    quirc_end(s_qr);
+
+    int num_codes = quirc_count(s_qr);
+#if 1
+    for (int i = 0; i < num_codes; i++) {
+        quirc_extract(s_qr, i, &s_q_code);
+        s_q_err = quirc_decode(&s_q_code, &s_q_data);
+        if (s_q_err == QUIRC_ERROR_DATA_ECC) {
+            quirc_flip(&s_q_code);
+            s_q_err = quirc_decode(&s_q_code, &s_q_data);
+        }
+        if (!s_q_err) {
+            ESP_LOGI("qrcode", "%s", s_q_data.payload);
+        }
+    }
+#endif
+    // quirc_destroy(qr);
+    return ESP_OK;
+
+}
+
 static esp_err_t image_stream_handler(httpd_req_t *req)
 {
     esp_err_t ret;
@@ -439,6 +487,7 @@ static esp_err_t image_stream_handler(httpd_req_t *req)
             ESP_GOTO_ON_ERROR(example_encoder_process(video->encoder_handle, video->buffer[buf.index], video->buffer_size,
                               video->jpeg_out_buf, video->jpeg_out_size, &jpeg_encoded_size),
                               fail0, TAG, "failed to encode video frame");
+            image_ai_process(video->buffer[buf.index], video->buffer_size);
         }
 
         ESP_GOTO_ON_ERROR(clock_gettime(CLOCK_MONOTONIC, &ts), fail0, TAG, "failed to get time");
@@ -563,7 +612,7 @@ static esp_err_t init_web_cam_video(web_cam_video_t *video, const web_cam_video_
         buf.index       = i;
         ESP_GOTO_ON_ERROR(ioctl(fd, VIDIOC_QUERYBUF, &buf), fail0, TAG, "failed to query vbuf from %s", config->dev_name);
 
-        video->buffer[i] = mmap(NULL, buf.length, PROT_READ | PROT_WRITE, MAP_SHARED, fd, buf.m.offset);
+        video->buffer[i] = (uint8_t *)mmap(NULL, buf.length, PROT_READ | PROT_WRITE, MAP_SHARED, fd, buf.m.offset);
         ESP_GOTO_ON_FALSE(video->buffer[i] != MAP_FAILED, ESP_ERR_NO_MEM, fail0, TAG, "failed to mmap buffer");
         video->buffer_size = buf.length;
 
@@ -638,7 +687,7 @@ static esp_err_t new_web_cam(const web_cam_video_config_t *config, int config_co
     esp_err_t ret = ESP_FAIL;
     int type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
-    wc = calloc(1, sizeof(web_cam_t) + config_count * sizeof(web_cam_video_t));
+    wc = (web_cam_t *)calloc(1, sizeof(web_cam_t) + config_count * sizeof(web_cam_video_t));
     ESP_RETURN_ON_FALSE(wc, ESP_ERR_NO_MEM, TAG, "failed to alloc web cam");
     wc->video_count = config_count;
 
@@ -739,7 +788,7 @@ static esp_err_t http_server_init(web_cam_t *web_cam)
         .user_ctx = (void *)web_cam
     };
 
-    config.stack_size = 1024 * 6;
+    config.stack_size = 1024 * 4;
     ESP_LOGI(TAG, "Starting stream server on port: '%d'", config.server_port);
     if (httpd_start(&stream_httpd, &config) == ESP_OK) {
         /* Register API handlers (more specific URIs) */
@@ -764,7 +813,7 @@ static esp_err_t http_server_init(web_cam_t *web_cam)
             .user_ctx = (void *) &web_cam->video[i]
         };
 
-        config.stack_size = 1024 * 6;
+        config.stack_size = 1024 * 20;
         config.server_port += 1;
         config.ctrl_port += 1;
         if (httpd_start(&stream_httpd, &config) == ESP_OK) {
@@ -805,7 +854,7 @@ static void initialise_mdns(void)
                                      sizeof(serviceTxtData) / sizeof(serviceTxtData[0])));
 }
 
-void app_main(void)
+extern "C" void app_main(void)
 {
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
@@ -863,6 +912,17 @@ void app_main(void)
     int config_count = sizeof(config) / sizeof(config[0]);
 
     assert(config_count > 0);
+
+    s_qr = quirc_new();
+    if (!s_qr) {
+        ESP_LOGE(TAG, "New qr obj failed");
+        return;
+    }
+    if (quirc_resize(s_qr, 240, 320) < 0) {
+        ESP_LOGE(TAG, "Failed to allocate fb memory");
+        return;
+    }
+
     ESP_ERROR_CHECK(start_cam_web_server(config, config_count));
 
     ESP_LOGI(TAG, "Camera web server starts");
