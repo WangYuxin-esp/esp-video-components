@@ -1,0 +1,7 @@
+version: "0.1.0"
+license: "MIT"
+description: color detect model.
+url: https://github.com/espressif/esp-dl/tree/master/models/color_detect
+dependencies: 
+  espressif/opencv:
+    override_path: /home/wxfa000220/esp/camera/github/opencv
