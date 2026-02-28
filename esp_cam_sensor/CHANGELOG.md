@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Disabled manual exposure control in the ov5647_mipi_2lane_24Minput_800x1280_raw8_50fps.h.
+
 ## 2.0.0
 
 - Fixed spi slave build error caused by spicommon_xxx private api change.
