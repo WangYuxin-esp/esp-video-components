@@ -351,7 +351,7 @@ typedef struct _cam_sensor_format_struct {
 
     const void *regs;                             /*!< Regs to enable this format */
     int regs_size;
-    uint8_t fps;                                  /*!< frames per second */
+    uint16_t fps;                                  /*!< frames per second */
     const esp_cam_sensor_isp_info_t *isp_info;    /*!< For sensor without internal ISP, set NULL if the sensor‘s internal ISP used. */
     union {
         esp_cam_sensor_mipi_info_t mipi_info;     /*!< MIPI RX init cfg */

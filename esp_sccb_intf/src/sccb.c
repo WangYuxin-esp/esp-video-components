@@ -16,6 +16,9 @@
 
 #define ESP_SCCB_TRANS_DEALY CONFIG_ESP_SCCB_TRANS_TIMEOUT_DEFAULT
 
+/** Same chunk size as sensor block I2C: each transaction carries up to this many payload bytes after 16-bit addr. */
+#define ESP_SCCB_BLOCK_CHUNK_SIZE 8
+
 static const char *TAG = "sccb";
 
 esp_err_t esp_sccb_transmit_reg_a8v8(esp_sccb_io_handle_t io_handle, uint8_t reg_addr, uint8_t reg_val)
@@ -168,6 +171,57 @@ esp_err_t esp_sccb_transmit_receive_reg_a16v32(esp_sccb_io_handle_t io_handle, u
     ESP_RETURN_ON_ERROR(io_handle->transmit_receive_reg_a16v32(io_handle, data, 2, (void *)reg_val, 4, ESP_SCCB_TRANS_DEALY), TAG, "failed to transmit_receive_reg_a16v32");
     *reg_val = __builtin_bswap32(*reg_val);
     return ESP_OK;
+}
+
+esp_err_t esp_sccb_transmit_block_a16(esp_sccb_io_handle_t io_handle, uint16_t start_addr, const uint8_t *data, size_t data_len)
+{
+    ESP_RETURN_ON_FALSE(io_handle, ESP_ERR_INVALID_ARG, TAG, "invalid argument: null pointer");
+    ESP_RETURN_ON_FALSE(io_handle->transmit_reg_a16v8, ESP_ERR_NOT_SUPPORTED, TAG, "controller driver function not supported");
+    if (data == NULL && data_len > 0) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    uint8_t frame_buf[2 + ESP_SCCB_BLOCK_CHUNK_SIZE];
+    size_t offset = 0;
+    uint16_t cur_addr = start_addr;
+
+    while (offset < data_len) {
+        size_t chunk_len = data_len - offset;
+        if (chunk_len > ESP_SCCB_BLOCK_CHUNK_SIZE) {
+            chunk_len = ESP_SCCB_BLOCK_CHUNK_SIZE;
+        }
+
+        frame_buf[0] = (uint8_t)(cur_addr >> 8);
+        frame_buf[1] = (uint8_t)(cur_addr & 0xFF);
+        for (size_t i = 0; i < chunk_len; i++) {
+            frame_buf[2 + i] = data[offset + i];
+        }
+
+        ESP_RETURN_ON_ERROR(
+            io_handle->transmit_reg_a16v8(io_handle, frame_buf, 2 + chunk_len, ESP_SCCB_TRANS_DEALY),
+            TAG,
+            "failed to transmit_block_a16");
+
+        offset += chunk_len;
+        cur_addr += (uint16_t)chunk_len;
+    }
+
+    return ESP_OK;
+}
+
+esp_err_t esp_sccb_transmit_receive_block_a16(esp_sccb_io_handle_t io_handle, uint16_t start_addr, uint8_t *data, size_t data_len)
+{
+    ESP_RETURN_ON_FALSE(io_handle, ESP_ERR_INVALID_ARG, TAG, "invalid argument: null pointer");
+    ESP_RETURN_ON_FALSE(io_handle->transmit_receive_reg_a16v8, ESP_ERR_NOT_SUPPORTED, TAG, "controller driver function not supported");
+    if (data == NULL && data_len > 0) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    uint8_t addr_buf[2];
+    addr_buf[0] = (uint8_t)(start_addr >> 8);
+    addr_buf[1] = (uint8_t)(start_addr & 0xFF);
+
+    return io_handle->transmit_receive_reg_a16v8(io_handle, addr_buf, sizeof(addr_buf), data, data_len, ESP_SCCB_TRANS_DEALY);
 }
 
 esp_err_t esp_sccb_transmit_v16(esp_sccb_io_handle_t io_handle, uint16_t val)
