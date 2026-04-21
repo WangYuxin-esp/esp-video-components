@@ -1,0 +1,45 @@
+menuconfig CAMERA_LROB001
+    bool "LROB001"
+    default n
+    depends on SOC_LCDCAM_CAM_SUPPORTED
+    help
+        Enable support for the LROB001 MIPI-CSI sensor (RAW8 output; tune register tables per datasheet).
+
+if CAMERA_LROB001
+    menu "Auto detect LROB001"
+        config CAMERA_LROB001_AUTO_DETECT_MIPI_INTERFACE_SENSOR
+            bool "Detect for MIPI interface sensor"
+            default y
+            help
+                When enabled, the LROB001 sensor will be automatically detected
+                and initialized on the MIPI interface at startup without requiring
+                manual detection call(lrob001_detect) in your application.
+    endmenu
+
+    menu "Choose supported formats for MIPI interface"
+        config CAMERA_LROB001_MIPI_RAW8_1280X720_60FPS
+            bool "MIPI 2-lane, 24M input, 1280x720 60fps, RAW8"
+            default y if IDF_TARGET_ESP32P4
+            default n
+            help
+                RAW8 at 1280x720 with 60 fps. Replace register table in
+                lrob001_mipi_2lane_24Minput_1280x720_raw8_60fps.h per hardware.
+    endmenu
+
+    choice CAMERA_LROB001_MIPI_DEFAULT_FMT
+        prompt "Select default output format for MIPI interface"
+        default CAMERA_LROB001_MIPI_DEFAULT_FMT_RAW8_1280X720_60FPS
+        help
+            Internal default format index when set_format(NULL) is used.
+
+        config CAMERA_LROB001_MIPI_DEFAULT_FMT_RAW8_1280X720_60FPS
+            bool "MIPI 2-lane, 24M input, 1280x720 60fps, RAW8"
+            depends on CAMERA_LROB001_MIPI_RAW8_1280X720_60FPS
+    endchoice
+
+    config CAMERA_LROB001_MIPI_IF_FORMAT_INDEX_DEFAULT
+        int
+        default 0 if CAMERA_LROB001_MIPI_DEFAULT_FMT_RAW8_1280X720_60FPS
+        help
+            Sets the default configuration for the MIPI interface.
+endif
