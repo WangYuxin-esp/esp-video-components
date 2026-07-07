@@ -46,9 +46,9 @@ extern "C" {
 /**
  * @brief MIPI-CSI camera sensor configuration
  */
-#define EXAMPLE_MIPI_CSI_SCCB_I2C_SCL_PIN               8
-#define EXAMPLE_MIPI_CSI_SCCB_I2C_SDA_PIN               7
-#define EXAMPLE_MIPI_CSI_CAM_SENSOR_RESET_PIN           -1
+#define EXAMPLE_MIPI_CSI_SCCB_I2C_SCL_PIN               17
+#define EXAMPLE_MIPI_CSI_SCCB_I2C_SDA_PIN               16
+#define EXAMPLE_MIPI_CSI_CAM_SENSOR_RESET_PIN           19
 #define EXAMPLE_MIPI_CSI_CAM_SENSOR_PWDN_PIN            -1
 #define EXAMPLE_MIPI_CSI_XCLK_PIN                       -1
 
