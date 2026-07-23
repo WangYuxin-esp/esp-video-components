@@ -1209,7 +1209,7 @@ static esp_err_t gc4053_power_on(esp_cam_sensor_device_t *dev)
         ESP_RETURN_ON_FALSE(ret == ESP_OK, ret, TAG, "gpio config failed");
 
         gpio_set_level(dev->reset_pin, 1);
-        delay_ms(10);
+        delay_ms(20);
     }
 
     return ret;
