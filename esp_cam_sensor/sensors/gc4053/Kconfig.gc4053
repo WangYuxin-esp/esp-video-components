@@ -25,18 +25,18 @@ if CAMERA_GC4053
             the sensor ID will be configured as 0x10, otherwise, the sensor ID will be configured as 0x31.
 
     menu "Choose supported formats for MIPI CSI interface"
-        config CAMERA_GC4053_MIPI_RAW10_1920X1080_30FPS
-            bool "MIPI 2-lane, 24M input, 1920x1080 30fps, RAW10"
-            default y
-            help
-                RAW10 color format at 1920x1080 resolution (FHD) with 30fps framerate.
-                Requires MIPI CSI-2 2-lane interface with 24MHz input clock.
-
         config CAMERA_GC4053_MIPI_RAW8_1920X1080_25FPS
             bool "MIPI 2-lane, 24M input, 1920x1080 25fps, RAW8"
-            default n
+            default y
             help
                 RAW8 color format at 1920x1080 resolution (FHD) with 25fps framerate.
+                Requires MIPI CSI-2 2-lane interface with 24MHz input clock.
+                
+        config CAMERA_GC4053_MIPI_RAW10_1920X1080_30FPS
+            bool "MIPI 2-lane, 24M input, 1920x1080 30fps, RAW10"
+            default n
+            help
+                RAW10 color format at 1920x1080 resolution (FHD) with 30fps framerate.
                 Requires MIPI CSI-2 2-lane interface with 24MHz input clock.
     endmenu
 

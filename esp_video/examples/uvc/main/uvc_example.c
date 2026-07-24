@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2024-2026 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: ESPRESSIF MIT
  */
@@ -16,6 +16,12 @@
 #include "usb_device_uvc.h"
 #include "uvc_frame_config.h"
 #include "example_video_common.h"
+
+#define XCLK_OUTPUT_FREQUENCY   (24000000) // Frequency in Hertz. Set frequency
+#define XCLK_OUTPUT_IO          (21) // Define the output GPIO
+#include "esp_cam_sensor_xclk.h"
+#include "driver/gpio.h"
+#include "esp_ldo_regulator.h"
 
 #if CONFIG_FORMAT_MJPEG_CAM1
 #define ENCODE_DEV_PATH     ESP_VIDEO_JPEG_DEVICE_NAME
@@ -408,6 +414,34 @@ void app_main(void)
 {
     uvc_t *uvc = calloc(1, sizeof(uvc_t));
     assert(uvc);
+
+    gpio_config_t conf = {0};
+    conf.pin_bit_mask = 1LL << 5;
+    conf.mode = GPIO_MODE_OUTPUT;
+    gpio_config(&conf);
+    gpio_set_level(5, 1);
+
+    conf.pin_bit_mask = 1LL << 6;
+    conf.mode = GPIO_MODE_OUTPUT;
+    gpio_config(&conf);
+    gpio_set_level(6, 1);
+
+    esp_ldo_channel_config_t ldo_cfg = {
+        .chan_id = 4,
+        .voltage_mv = 1800,
+    };
+
+    esp_ldo_acquire_channel(&ldo_cfg, NULL);
+
+    esp_cam_sensor_xclk_handle_t xclk_handle = NULL;
+    esp_cam_sensor_xclk_config_t cam_xclk_config = {
+        .esp_clock_router_cfg = {
+            .xclk_pin = XCLK_OUTPUT_IO,
+            .xclk_freq_hz = XCLK_OUTPUT_FREQUENCY,
+        }
+    };
+    esp_cam_sensor_xclk_allocate(ESP_CAM_SENSOR_XCLK_ESP_CLOCK_ROUTER, &xclk_handle);
+    esp_cam_sensor_xclk_start(xclk_handle, &cam_xclk_config);
 
     ESP_ERROR_CHECK(example_video_init());
     ESP_ERROR_CHECK(init_capture_video(uvc));

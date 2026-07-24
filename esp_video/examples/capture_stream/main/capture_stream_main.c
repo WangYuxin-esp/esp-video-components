@@ -429,6 +429,8 @@ exit_0:
 #define XCLK_OUTPUT_FREQUENCY   (24000000) // Frequency in Hertz. Set frequency
 #define XCLK_OUTPUT_IO          (21) // Define the output GPIO
 #include "esp_cam_sensor_xclk.h"
+#include "driver/gpio.h"
+#include "esp_ldo_regulator.h"
 
 void app_main(void)
 {
