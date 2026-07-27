@@ -62,8 +62,8 @@ struct gc4053_cam {
 #define delay_ms(ms)  vTaskDelay((ms > portTICK_PERIOD_MS ? ms/ portTICK_PERIOD_MS : 1))
 
 static const uint32_t s_limited_gain = CONFIG_CAMERA_GC4053_ABSOLUTE_GAIN_LIMIT;
-static const uint8_t s_gc4053_exp_max_offset = 0x20; // min:1, max:VTS-32
-static const uint8_t s_gc4053_exp_min = 0x02;
+static const uint8_t s_gc4053_exp_max_offset = 16; // min:4, max:VTS-16
+static const uint8_t s_gc4053_exp_min = 0x04;
 static const char *TAG = "gc4053";
 #define GC4053_MODE_SW_STANDBY  0x11
 #define GC4053_MODE_STREAMING   0x91
@@ -705,13 +705,13 @@ static const esp_cam_sensor_isp_info_t gc4053_isp_info_mipi[] = {
     {
         .isp_v1_info = {
             .version     = SENSOR_ISP_INFO_VERSION_DEFAULT,
-            .pclk        = 74250000,
-            .hts         = 2200,
-            .vts         = 1338,
+            .pclk        = 40500000,
+            .hts         = 600,
+            .vts         = 2700,
             .exp_def     = 0x02a3,
             .gain_def    = 0x0,
-            .tline_ns    = 29629,
-            .bayer_type  = ESP_CAM_SENSOR_BAYER_RGGB,
+            .tline_ns    = 14810,
+            .bayer_type  = ESP_CAM_SENSOR_BAYER_GRBG,
         },
     },
 };
@@ -726,7 +726,7 @@ static const uint8_t gc4053_format_index[] = {
 #if CONFIG_CAMERA_GC4053_MIPI_RAW10_1920X1080_30FPS
     0,
 #endif
-#if CONFIG_CAMERA_GC4053_MIPI_RAW8_1920X1080_25FPS
+#if CONFIG_CAMERA_GC4053_MIPI_RAW10_1440X1440_30FPS
     1,
 #endif
 };
@@ -754,9 +754,9 @@ static const esp_cam_sensor_format_t gc4053_format_info_mipi[] = {
         .reserved = NULL,
     },
 #endif
-#if CONFIG_CAMERA_GC4053_MIPI_RAW8_1920X1080_25FPS
+#if CONFIG_CAMERA_GC4053_MIPI_RAW10_1440X1440_30FPS
     {
-        .name = "MIPI_2lane_24Minput_RAW8_1920x1080_25fps",
+        .name = "MIPI_2lane_24Minput_RAW10_1440x1440_30fps",
         .format = ESP_CAM_SENSOR_PIXFORMAT_RAW10,
         .port = ESP_CAM_SENSOR_MIPI_CSI,
         .xclk = 24000000,

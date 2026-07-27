@@ -20,8 +20,8 @@ extern "C" {
 #if CONFIG_CAMERA_GC4053_MIPI_RAW10_1920X1080_30FPS
 #include "gc4053_mipi_2lane_24Minput_raw10_1920x1080_30fps.h"
 #endif
-#if CONFIG_CAMERA_GC4053_MIPI_RAW8_1920X1080_25FPS
-#include "gc4053_mipi_2lane_24Minput_raw8_1920x1080_25fps.h"
+#if CONFIG_CAMERA_GC4053_MIPI_RAW10_1440X1440_30FPS
+#include "gc4053_mipi_2lane_24Minput_raw10_1440x1440_30fps.h"
 #endif
 #endif
 

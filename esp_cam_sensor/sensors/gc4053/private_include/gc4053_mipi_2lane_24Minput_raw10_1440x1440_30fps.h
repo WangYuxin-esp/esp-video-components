@@ -7,6 +7,15 @@
 #include "gc4053_types.h"
 #include "gc4053_regs.h"
 
+/*Mclk=24 MHz
+mipi_rate = 972 Mbps/lane  Fvco=972 Mbps
+wpclk = 162 MHz
+rpclk = 194.4 MHz
+FL = 2700
+HB = 600
+rowtime=14.81 μs
+Bayer: GR_BG
+*/
 static const gc4053_reginfo_t init_reglist_MIPI_2lane_24Minput_RAW10_1440x1440_30fps[] = {
     {0x03fe, 0xff},
     {0x03fe, 0x00},
@@ -119,8 +128,8 @@ static const gc4053_reginfo_t init_reglist_MIPI_2lane_24Minput_RAW10_1440x1440_3
     {0x0070, 0x40},
     {0x0d04, 0x00},
     {0x0d05, 0x02},
-    {0x0202, 0x00},
-    {0x0203, 0x10},
+    {0x0202, 0x02},
+    {0x0203, 0xa3},
     {0x0800, 0x01},
     {0x0810, 0x01},
     {0x0810, 0x00},
@@ -398,13 +407,13 @@ static const gc4053_reginfo_t init_reglist_MIPI_2lane_24Minput_RAW10_1440x1440_3
     {0x002a, 0x05},
     {0x002b, 0xa8},
     {0x0a94, 0x80},
-    // sleep 20ms
-    {GC4053_REG_DELAY, 0x10},
+    /* TODO: original "sleep 20ms"; mapped to GC4053_REG_DELAY with val=20 (ms). Confirm vs comment-only / prior 0x10. */
+    {GC4053_REG_DELAY, 20},
     {0x05be, 0x01},
     {0x0080, 0x02},
     {0x0020, 0xc0},
     {0x0261, 0x13},
-    {0x0100, 0x00},
+    {0x0100, 0x00}, // stream off default
     {0x010a, 0x01},
     {0x010b, 0x01},
     {0x010c, 0x2b},
@@ -426,6 +435,6 @@ static const gc4053_reginfo_t init_reglist_MIPI_2lane_24Minput_RAW10_1440x1440_3
     {0x0336, 0x01},
     {0x0336, 0x00},
     {0x03fe, 0x00},
-
+    /* TODO: GC4053_REG_END terminator required by gc4053_write_array(); not present in source table. */
     {GC4053_REG_END, 0x00},
 };
